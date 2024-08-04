@@ -1,1 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gourmet Pantry Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4A5859',
+                        secondary: '#F4A259',
+                        accent: '#BC4B51',
+                        neutral: '#F4E285',
+                        wood: '#8B4513',
+                    },
+                    fontFamily: {
+                        'serif': ['Merriweather', 'serif'],
+                        'sans': ['Lato', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Lato:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: #F9F5EB;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f4e285' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Merriweather', serif;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+        
+        .wood-texture {
+            background-color: #8B4513;
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
 
+        .pantry-item {
+            width: 60px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .pantry-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="container mx-auto max-w-6xl">
+        <h1 class="text-5xl font-bold text-center text-primary mb-8 floating font-serif">Gourmet Pantry Tracker</h1>
+        
+        <div class="card p-6 mb-8 border-l-4 border-secondary">
+            <form id="itemForm" class="flex flex-wrap gap-4">
+                <input type="text" id="itemName" placeholder="Item name" required class="flex-grow p-2 border rounded focus:ring focus:ring-secondary focus:border-secondary">
+                <input type="number" id="itemQuantity" placeholder="Quantity" required min="1" class="w-24 p-2 border rounded focus:ring focus:ring-secondary focus:border-secondary">
+                <select id="itemCategory" class="p-2 border rounded focus:ring focus:ring-secondary focus:border-secondary">
+                    <option value="">Select Category</option>
+                    <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+                    <option value="Dairy & Eggs">Dairy & Eggs</option>
+                    <option value="Grains & Pasta">Grains & Pasta</option>
+                    <option value="Meat & Protein">Meat & Protein</option>
+                    <option value="Snacks">Snacks</option>
+                    <option value="Beverages">Beverages</option>
+                    <option value="Other">Other</option>
+                </select>
+                <input type="date" id="expirationDate" class="p-2 border rounded focus:ring focus:ring-secondary focus:border-secondary">
+                <button type="submit" class="bg-secondary text-white px-4 py-2 rounded hover:bg-opacity-80 transition">
+                    <i class="fas fa-plus mr-2"></i>Add Item
+                </button>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="card p-6">
+                <h2 class="text-3xl font-semibold mb-4 text-primary font-serif">Pantry Shelf</h2>
+                <div id="pantryShelf" class="wood-texture p-4 rounded-lg mb-4 min-h-[200px] flex flex-wrap gap-2 justify-center items-start"></div>
+                <ul id="itemList" class="space-y-2"></ul>
+            </div>
+            
+            <div class="card p-6">
+                <h2 class="text-3xl font-semibold mb-4 text-primary font-serif">Pantry Stats</h2>
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <div id="expirationWarning" class="mt-8 p-4 bg-accent bg-opacity-10 rounded-lg hidden card">
+            <h3 class="text-2xl font-semibold text-accent font-serif"><i class="fas fa-exclamation-triangle mr-2"></i>Expiration Alert</h3>
+            <ul id="expiringItems" class="mt-2 text-accent"></ul>
+        </div>
+    </div>
+
+    <script>
+        const itemForm = document.getElementById('itemForm');
+        const itemList = document.getElementById('itemList');
+        const categoryChart = document.getElementById('categoryChart');
+        const expirationWarning = document.getElementById('expirationWarning');
+        const expiringItems = document.getElementById('expiringItems');
+        const pantryShelf = document.getElementById('pantryShelf');
+        let items = JSON.parse(localStorage.getItem('pantryItems')) || [];
+        let chart;
+
+        const categoryIcons = {
+            'Fruits & Vegetables': 'fa-apple-alt',
+            'Dairy & Eggs': 'fa-egg',
+            'Grains & Pasta': 'fa-bread-slice',
+            'Meat & Protein': 'fa-drumstick-bite',
+            'Snacks': 'fa-cookie',
+            'Beverages': 'fa-coffee',
+            'Other': 'fa-box'
+        };
+
+        function renderItems() {
+            itemList.innerHTML = '';
+            pantryShelf.innerHTML = '';
+            items.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center p-3 border-b border-gray-200 hover:bg-gray-50 transition';
+                li.innerHTML = `
+                    <span class="flex items-center">
+                        <i class="fas ${categoryIcons[item.category]} text-secondary mr-3"></i>
+                        <div>
+                            <strong class="text-primary">${item.name}</strong>
+                            <br><small class="text-gray-500">${item.category} | Qty: ${item.quantity} | Expires: ${item.expirationDate}</small>
+                        </div>
+                    </span>
+                    <button onclick="removeItem(${index})" class="bg-accent text-white px-2 py-1 rounded hover:bg-opacity-80 transition">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                itemList.appendChild(li);
+
+                const shelfItem = document.createElement('div');
+                shelfItem.className = 'pantry-item';
+                shelfItem.innerHTML = `
+                    <div>
+                        <i class="fas ${categoryIcons[item.category]} text-secondary text-2xl mb-1"></i>
+                        <small class="block text-primary font-semibold">${item.name}</small>
+                    </div>
+                `;
+                pantryShelf.appendChild(shelfItem);
+
+                gsap.from(li, {opacity: 0, y: 20, duration: 0.5, ease: "power2.out"});
+                gsap.from(shelfItem, {scale: 0, duration: 0.5, ease: "back.out(1.7)"});
+            });
+            updateChart();
+            checkExpirations();
+        }
+
+        function saveItems() {
+            localStorage.setItem('pantryItems', JSON.stringify(items));
+        }
+
+        itemForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('itemName').value;
+            const quantity = parseInt(document.getElementById('itemQuantity').value);
+            const category = document.getElementById('itemCategory').value;
+            const expirationDate = document.getElementById('expirationDate').value;
+            items.push({ name, quantity, category, expirationDate });
+            saveItems();
+            renderItems();
+            itemForm.reset();
+        });
+
+        function removeItem(index) {
+            gsap.to(itemList.children[index], {
+                opacity: 0, 
+                x: 100, 
+                duration: 0.5, 
+                ease: "power2.in",
+                onComplete: () => {
+                    items.splice(index, 1);
+                    saveItems();
+                    renderItems();
+                }
+            });
+        }
+
+        function updateChart() {
+            const categories = {};
+            items.forEach(item => {
+                categories[item.category] = (categories[item.category] || 0) + 1;
+            });
+
+            const data = {
+                labels: Object.keys(categories),
+                datasets: [{
+                    data: Object.values(categories),
+                    backgroundColor: [
+                        '#F4A259', '#BC4B51', '#B0C592', '#5B8E7D', '#F4E285', '#4A5859', '#8B4513'
+                    ]
+                }]
+            };
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(categoryChart, {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Items by Category',
+                            font: {
+                                size: 18,
+                                family: "'Merriweather', serif"
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function checkExpirations() {
+            const today = new Date();
+            const soonToExpire = items.filter(item => {
+                const expDate = new Date(item.expirationDate);
+                const daysUntilExpiration = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+                return daysUntilExpiration <= 3 && daysUntilExpiration > 0;
+            });
+
+            if (soonToExpire.length > 0) {
+                expirationWarning.classList.remove('hidden');
+                expiringItems.innerHTML = soonToExpire.map(item => 
+                    `<li class="mb-2"><i class="fas fa-clock mr-2"></i>${item.name} expires on ${item.expirationDate}</li>`
+                ).join('');
+                gsap.from(expirationWarning, {y: 50, opacity: 0, duration: 0.5, ease: "power2.out"});
+            } else {
+                expirationWarning.classList.add('hidden');
+            }
+        }
+
+        renderItems();
+    </script>
+</body>
+</html>
